@@ -1,0 +1,39 @@
+name: Validate syntax
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Parse PowerShell without executing repair
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $PWD 'Repair-MediaFeaturePack.ps1'),
+            [ref]$tokens,
+            [ref]$parseErrors
+          ) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | Format-List
+            exit 1
+          }
+      - name: Parse Python without accessing a camera
+        shell: powershell
+        run: |
+          python -c "import ast,pathlib; ast.parse(pathlib.Path('capture_photo.py').read_text(encoding='utf-8'))"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python capture_photo.py --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Exercise repair decisions with mocked system operations
+        shell: powershell
+        run: .\tests\Test-RepairLogic.ps1

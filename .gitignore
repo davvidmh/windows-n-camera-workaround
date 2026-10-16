@@ -1,0 +1,18 @@
+# Captures and local diagnostics must stay private.
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+*.log
+*.dmp
+*.etl
+*.evtx
+*.zip
+*.cab
+*.iso
+__pycache__/
+.venv/
+.env
+.env.*
+local-diagnostics/
